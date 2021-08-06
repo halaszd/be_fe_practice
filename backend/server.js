@@ -1,7 +1,15 @@
 const path = require('path')
 const express = require('express');
 const server = express();
+const formidable = require('formidable')
 const port = 3000;
+
+// Create frontend and backend folder
+// index.html, style.js, index.js into frontend
+// Cd backend, 
+// Create server.js
+// init npm
+// npm install express –save
 
 server.use('/public', express.static(path.join("../", "frontend", "public")));
 // ha react lenne a frontend és buildelt verziót szeretnénk importálni:
@@ -16,21 +24,23 @@ server.get('/', (req, res) => {
 // a küldött csomag slice-olva van nem egyben adódik át
 // a feljécben (header): mekkora az adat, hány csomagot vár a másik
 // a bejövő fejlécet meg tudjuk változtatni arra, amire akarjuk
-// így lehetne:
-server.use(function (req, res, next) {
-	req.headers['content-type'] = 'application/json';
-	next();
-  });
-
 // arra készíti fel a szervert, hogy JSON fálj jön
-server.use(express.json());
 // ha nested json jönne
-server.use(express.urlencoded({ extended:true }))
-server.post('/', (req, res) => {
-	// req.header("Content-Type", "application/json")
-	console.log(req.body.firstname)
-	res.send("Welcome");
-})
+server.post('/', (req, res, next) => {
+	const form = formidable({ multiples: true, uploadDir: path.join(__dirname, './upload/') }) ;
+   
+	form.parse(req, (err, fields, files) => {
+	  if (err) {
+		next(err);
+		return;
+	  }
+	  res.json({ fields, files });
+	  console.log(fields);
+	  console.log(files);
+	  const userFields = JSON.parse(fields.userJson);
+	  console.log(userFields.firstname);
+	});
+  });
 
 server.listen(port, () => {
 	console.log(`Example app listening at
